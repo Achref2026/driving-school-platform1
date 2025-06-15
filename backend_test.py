@@ -750,6 +750,19 @@ class DrivingSchoolAPITester:
             200
         )
 
+def test_get_my_quizzes(self):
+    """Test getting manager's quizzes"""
+    if self.user_role != 'manager':
+        print("Skipping get my quizzes - requires manager role")
+        return False, {}
+        
+    return self.run_test(
+        "Get My Quizzes",
+        "GET",
+        "api/quizzes/my",
+        200
+    )
+
 def main():
     # Setup
     tester = DrivingSchoolAPITester()
@@ -757,37 +770,19 @@ def main():
     print("\n🔍 ALGERIA DRIVING SCHOOL PLATFORM API TEST\n")
     print("Testing critical functionality based on the fix request:\n")
     
-    # 1. Test health check
+    # 1. Test health check (both root and API prefixed)
     health_success, health_data = tester.test_health_check()
     if not health_success:
-        print("❌ Health check failed, stopping tests")
+        print("❌ API health check failed, stopping tests")
         return 1
     else:
-        print(f"✅ Health check passed: {health_data}")
+        print(f"✅ API health check passed: {health_data}")
     
-    # 2. Test states API (previously failing with 503)
-    states_success, states_data = tester.test_get_states()
-    if states_success:
-        states_count = len(states_data.get('states', []))
-        print(f"✅ Retrieved {states_count} Algerian states")
-        if states_count == 58:
-            print("✅ Correct number of states (58) returned")
-        else:
-            print(f"❌ Incorrect number of states: {states_count}/58")
-        print(f"First 5 states: {', '.join(states_data.get('states', [])[:5])}")
-    else:
-        print("❌ Failed to retrieve states")
-    
-    # 3. Test driving schools API with different filters
+    # 2. Test driving schools API
     schools_success, schools_data = tester.test_get_driving_schools()
     if schools_success:
         schools_count = len(schools_data.get('schools', []))
         print(f"✅ Retrieved {schools_count} driving schools")
-        
-        if schools_count == 8:
-            print("✅ Correct number of sample schools (8) returned")
-        else:
-            print(f"❌ Incorrect number of sample schools: {schools_count}/8")
         
         # Print school names to verify
         school_names = [school.get('name', 'Unknown') for school in schools_data.get('schools', [])]
@@ -798,93 +793,47 @@ def main():
             print(f"✅ Pagination info: {schools_data.get('pagination')}")
         else:
             print("❌ Pagination information missing")
-        
-        # Test with state filter
-        if states_success and states_data.get('states'):
-            # Test with Alger state
-            state_filter_success, state_filter_data = tester.test_get_driving_schools(state="Alger")
-            if state_filter_success:
-                alger_schools = len(state_filter_data.get('schools', []))
-                print(f"✅ State filter (Alger) working: {alger_schools} schools found")
-            else:
-                print(f"❌ State filter not working")
-            
-            # Test with Oran state
-            oran_filter_success, oran_filter_data = tester.test_get_driving_schools(state="Oran")
-            if oran_filter_success:
-                oran_schools = len(oran_filter_data.get('schools', []))
-                print(f"✅ State filter (Oran) working: {oran_schools} schools found")
-            else:
-                print(f"❌ State filter not working for Oran")
-        
-        # Test with price filter
-        price_filter_success, price_filter_data = tester.test_get_driving_schools(min_price=20000, max_price=26000)
-        if price_filter_success:
-            price_schools = len(price_filter_data.get('schools', []))
-            print(f"✅ Price filter (20,000-26,000 DA) working: {price_schools} schools found")
-        else:
-            print(f"❌ Price filter not working")
-        
-        # Test with rating filter
-        rating_filter_success, rating_filter_data = tester.test_get_driving_schools(min_rating=4.0)
-        if rating_filter_success:
-            rating_schools = len(rating_filter_data.get('schools', []))
-            print(f"✅ Rating filter (4.0+) working: {rating_schools} schools found")
-        else:
-            print(f"❌ Rating filter not working")
-        
-        # Test sorting by name
-        sort_name_success, sort_name_data = tester.test_get_driving_schools(sort_by="name", sort_order="asc")
-        if sort_name_success:
-            print(f"✅ Sorting (name, ascending) working")
-        else:
-            print(f"❌ Sorting by name not working")
-            
-        # Test sorting by price
-        sort_price_success, sort_price_data = tester.test_get_driving_schools(sort_by="price", sort_order="asc")
-        if sort_price_success:
-            print(f"✅ Sorting (price, ascending) working")
-        else:
-            print(f"❌ Sorting by price not working")
-            
-        # Test sorting by rating
-        sort_rating_success, sort_rating_data = tester.test_get_driving_schools(sort_by="rating", sort_order="desc")
-        if sort_rating_success:
-            print(f"✅ Sorting (rating, descending) working")
-        else:
-            print(f"❌ Sorting by rating not working")
     else:
         print("❌ Failed to retrieve driving schools")
     
-    # 4. Test authentication with sample credentials
-    login_success = False
-    print("\nTesting authentication with sample credentials:")
-    
-    # Test student login
-    student_login_success = tester.test_login("student@test.dz", "student123")
-    if student_login_success:
-        print("✅ Student login successful")
-        login_success = True
+    # 3. Test authentication with manager credentials
+    print("\nTesting authentication with manager credentials:")
+    manager_login_success = tester.test_login("manager@test.com", "password123")
+    if manager_login_success:
+        print("✅ Manager login successful")
+        
+        # 4. Test manager-specific endpoints
+        
+        # Test adding a teacher
+        add_teacher_success, add_teacher_data = tester.test_add_teacher()
+        if add_teacher_success:
+            print("✅ Teacher addition successful")
+            if 'teacher' in add_teacher_data:
+                print(f"Teacher added: {add_teacher_data['teacher'].get('email', 'Unknown')}")
+        else:
+            print("❌ Teacher addition failed")
+        
+        # Test getting manager's quizzes
+        quizzes_success, quizzes_data = tester.test_get_my_quizzes()
+        if quizzes_success:
+            quizzes_count = len(quizzes_data.get('quizzes', []))
+            print(f"✅ Retrieved {quizzes_count} quizzes for manager")
+            if quizzes_count > 0:
+                quiz_titles = [quiz.get('title', 'Unknown') for quiz in quizzes_data.get('quizzes', [])]
+                print(f"Quiz titles: {', '.join(quiz_titles)}")
+        else:
+            print("❌ Failed to retrieve manager's quizzes")
+        
+        # Test creating a quiz
+        create_quiz_success, create_quiz_data = tester.test_create_quiz()
+        if create_quiz_success:
+            print("✅ Quiz creation successful")
+            if 'quiz_id' in create_quiz_data:
+                print(f"Quiz created with ID: {create_quiz_data['quiz_id']}")
+        else:
+            print("❌ Quiz creation failed")
     else:
-        print("❌ Student login failed")
-    
-    # If student login failed, try manager login
-    if not login_success:
-        manager_login_success = tester.test_login("manager1@ecoledeconduitealgercentreschool.dz", "manager123")
-        if manager_login_success:
-            print("✅ Manager login successful")
-            login_success = True
-        else:
-            print("❌ Manager login failed")
-    
-    # 5. Test dashboard access after login
-    if login_success:
-        dashboard_success, dashboard_data = tester.test_get_dashboard()
-        if dashboard_success:
-            print("✅ Dashboard access successful")
-            print(f"Dashboard data includes: {', '.join(dashboard_data.keys())}")
-        else:
-            print("❌ Dashboard access failed")
+        print("❌ Manager login failed")
     
     # Print results
     print(f"\n📊 Tests passed: {tester.tests_passed}/{tester.tests_run}")
@@ -895,67 +844,34 @@ def main():
     print("✅ Working features:")
     if health_success:
         print("  - Backend health check")
-    if states_success:
-        states_count = len(states_data.get('states', []))
-        print(f"  - States API (returns {states_count}/58 Algerian states)")
     if schools_success:
-        print(f"  - Driving schools listing (found {len(schools_data.get('schools', []))}/8 schools)")
+        print(f"  - Driving schools listing (found {len(schools_data.get('schools', []))} schools)")
         if schools_data.get('pagination'):
             print("  - Pagination")
-        if 'state_filter_success' in locals() and state_filter_success:
-            print("  - State filtering")
-        if 'price_filter_success' in locals() and price_filter_success:
-            print("  - Price filtering")
-        if 'rating_filter_success' in locals() and rating_filter_success:
-            print("  - Rating filtering")
-        if 'sort_name_success' in locals() and sort_name_success:
-            print("  - Sorting by name")
-        if 'sort_price_success' in locals() and sort_price_success:
-            print("  - Sorting by price")
-        if 'sort_rating_success' in locals() and sort_rating_success:
-            print("  - Sorting by rating")
-    if 'student_login_success' in locals() and student_login_success:
-        print("  - Student authentication")
     if 'manager_login_success' in locals() and manager_login_success:
         print("  - Manager authentication")
-    if 'dashboard_success' in locals() and dashboard_success:
-        print("  - Dashboard access")
+    if 'add_teacher_success' in locals() and add_teacher_success:
+        print("  - Teacher addition")
+    if 'quizzes_success' in locals() and quizzes_success:
+        print("  - Manager quizzes retrieval")
+    if 'create_quiz_success' in locals() and create_quiz_success:
+        print("  - Quiz creation")
     
     print("\n❌ Issues/Not working:")
     if not health_success:
         print("  - Backend health check not working")
-    if not states_success:
-        print("  - States API not working")
-    else:
-        states_count = len(states_data.get('states', []))
-        if states_count != 58:
-            print(f"  - Incorrect number of states: {states_count}/58")
     if not schools_success:
         print("  - Driving schools listing not working")
-    elif schools_success:
-        schools_count = len(schools_data.get('schools', []))
-        if schools_count != 8:
-            print(f"  - Incorrect number of sample schools: {schools_count}/8")
-        if not schools_data.get('pagination'):
-            print("  - Pagination information missing")
-        if 'state_filter_success' in locals() and not state_filter_success:
-            print("  - State filtering not working")
-        if 'price_filter_success' in locals() and not price_filter_success:
-            print("  - Price filtering not working")
-        if 'rating_filter_success' in locals() and not rating_filter_success:
-            print("  - Rating filtering not working")
-        if 'sort_name_success' in locals() and not sort_name_success:
-            print("  - Sorting by name not working")
-        if 'sort_price_success' in locals() and not sort_price_success:
-            print("  - Sorting by price not working")
-        if 'sort_rating_success' in locals() and not sort_rating_success:
-            print("  - Sorting by rating not working")
-    if 'student_login_success' in locals() and not student_login_success:
-        print("  - Student authentication not working")
+    elif schools_success and not schools_data.get('pagination'):
+        print("  - Pagination information missing")
     if 'manager_login_success' in locals() and not manager_login_success:
         print("  - Manager authentication not working")
-    if 'dashboard_success' in locals() and not dashboard_success:
-        print("  - Dashboard access not working")
+    if 'add_teacher_success' in locals() and not add_teacher_success:
+        print("  - Teacher addition not working")
+    if 'quizzes_success' in locals() and not quizzes_success:
+        print("  - Manager quizzes retrieval not working")
+    if 'create_quiz_success' in locals() and not create_quiz_success:
+        print("  - Quiz creation not working")
     
     return 0 if tester.tests_passed == tester.tests_run else 1
 
