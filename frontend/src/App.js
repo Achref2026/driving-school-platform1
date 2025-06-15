@@ -336,6 +336,19 @@ function App() {
     }
   };
 
+  // Fetch manager-specific data (teachers, quizzes, etc.)
+  const fetchManagerData = async () => {
+    try {
+      if (user && user.role === 'manager') {
+        // Fetch teachers
+        await fetchUserSchool();
+        // Additional manager-specific data fetching can be added here
+      }
+    } catch (error) {
+      console.error('Error fetching manager data:', error);
+    }
+  };
+
   // Fetch driving schools
   const fetchDrivingSchools = async (customFilters = {}) => {
     try {
