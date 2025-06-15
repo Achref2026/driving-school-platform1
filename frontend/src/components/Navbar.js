@@ -11,6 +11,21 @@ function Navbar() {
     navigate('/');
   };
 
+  // Hide schools link for these roles
+  const shouldShowSchoolsLink = () => {
+    if (!user) return true; // Show for guests
+    const restrictedRoles = ['teacher', 'manager'];
+    
+    // Also hide for enrolled students (users with student role who have enrollments)
+    if (user.role === 'student') {
+      // You can add additional logic here to check if student is enrolled
+      // For now, we'll hide it for all students with approved enrollments
+      return false;
+    }
+    
+    return !restrictedRoles.includes(user.role);
+  };
+
   return (
     <nav className="bg-blue-600 text-white shadow-lg">
       <div className="container mx-auto px-4">
@@ -20,9 +35,11 @@ function Navbar() {
           </Link>
           
           <div className="flex items-center space-x-4">
-            <Link to="/schools" className="hover:text-blue-200">
-              Schools
-            </Link>
+            {shouldShowSchoolsLink() && (
+              <Link to="/schools" className="hover:text-blue-200">
+                Schools
+              </Link>
+            )}
             
             {user ? (
               <>
