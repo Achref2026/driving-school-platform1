@@ -782,56 +782,56 @@ def test_get_my_quizzes(self):
         200
     )
 
-def test_add_teacher_with_password(self):
-    """Test adding a teacher with a password"""
-    if self.user_role != 'manager':
-        print("Skipping teacher addition - requires manager role")
-        return False, {}
-            
-    teacher_email = f"teacher_{int(time.time())}@test.com"
-    teacher_password = "TeacherPass123!"
-    
-    data = {
-        "email": teacher_email,
-        "first_name": "Test",
-        "last_name": "Teacher",
-        "phone": "0555123456",
-        "address": "123 Test Street",
-        "date_of_birth": "1990-01-01",
-        "gender": "male",
-        "password": teacher_password,  # Adding password field
-        "can_teach_male": True,
-        "can_teach_female": True
-    }
-    
-    success, response = self.run_test(
-        "Add Teacher with Password",
-        "POST",
-        "api/teachers/add",
-        200,
-        data=data
-    )
-    
-    if success:
-        print(f"✅ Teacher added with email: {teacher_email} and password: {teacher_password}")
+    def test_add_teacher_with_password(self):
+        """Test adding a teacher with a password"""
+        if self.user_role != 'manager':
+            print("Skipping teacher addition - requires manager role")
+            return False, {}
+                
+        teacher_email = f"teacher_{int(time.time())}@test.com"
+        teacher_password = "TeacherPass123!"
         
-        # Now test if the teacher can login with the provided password
-        login_success, login_response = self.run_test(
-            "Teacher Login with Password",
+        data = {
+            "email": teacher_email,
+            "first_name": "Test",
+            "last_name": "Teacher",
+            "phone": "0555123456",
+            "address": "123 Test Street",
+            "date_of_birth": "1990-01-01",
+            "gender": "male",
+            "password": teacher_password,  # Adding password field
+            "can_teach_male": True,
+            "can_teach_female": True
+        }
+        
+        success, response = self.run_test(
+            "Add Teacher with Password",
             "POST",
-            "api/auth/login",
+            "api/teachers/add",
             200,
-            data={"email": teacher_email, "password": teacher_password}
+            data=data
         )
         
-        if login_success and 'access_token' in login_response:
-            print(f"✅ Teacher login successful with provided password")
-            return True, {"teacher_email": teacher_email, "teacher_password": teacher_password}
-        else:
-            print(f"❌ Teacher login failed with provided password")
-            return False, {}
-    
-    return success, response
+        if success:
+            print(f"✅ Teacher added with email: {teacher_email} and password: {teacher_password}")
+            
+            # Now test if the teacher can login with the provided password
+            login_success, login_response = self.run_test(
+                "Teacher Login with Password",
+                "POST",
+                "api/auth/login",
+                200,
+                data={"email": teacher_email, "password": teacher_password}
+            )
+            
+            if login_success and 'access_token' in login_response:
+                print(f"✅ Teacher login successful with provided password")
+                return True, {"teacher_email": teacher_email, "teacher_password": teacher_password}
+            else:
+                print(f"❌ Teacher login failed with provided password")
+                return False, {}
+        
+        return success, response
 
 def main():
     # Setup
