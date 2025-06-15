@@ -649,9 +649,16 @@ function App() {
     if (currentPage === 'dashboard' && user) {
       fetchDashboardData();
       fetchUserDocuments();
-      fetchUserSchool();
+      fetchManagerData(); // This will fetch manager-specific data including user school
     }
   }, [currentPage, user]);
+
+  // Fetch manager data when user role changes to manager
+  useEffect(() => {
+    if (user && user.role === 'manager') {
+      fetchManagerData();
+    }
+  }, [user?.role]);
 
   // Navigation Component
   const renderNavigation = () => (
