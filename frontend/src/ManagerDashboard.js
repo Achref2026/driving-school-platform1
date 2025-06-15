@@ -31,6 +31,7 @@ const ManagerDashboard = ({ user, token }) => {
     address: '',
     date_of_birth: '',
     gender: 'male',
+    password: '', // Added password field
     can_teach_male: true,
     can_teach_female: true
   });
@@ -135,6 +136,13 @@ const ManagerDashboard = ({ user, token }) => {
 
   const handleAddTeacher = async (e) => {
     e.preventDefault();
+    
+    // Validate password
+    if (!teacherForm.password || teacherForm.password.length < 6) {
+      alert('Password must be at least 6 characters long');
+      return;
+    }
+    
     try {
       const headers = { Authorization: `Bearer ${token}` };
       const response = await axios.post(`${API}/teachers/add`, teacherForm, { headers });
@@ -153,11 +161,12 @@ const ManagerDashboard = ({ user, token }) => {
         address: '',
         date_of_birth: '',
         gender: 'male',
+        password: '', // Reset password field
         can_teach_male: true,
         can_teach_female: true
       });
       
-      alert('Teacher added successfully!');
+      alert(`Teacher added successfully! Teacher can login with email: ${teacherForm.email} and the password you provided.`);
     } catch (error) {
       console.error('Error adding teacher:', error);
       const errorMessage = error.response?.data?.detail || 'Failed to add teacher';
@@ -166,7 +175,7 @@ const ManagerDashboard = ({ user, token }) => {
   };
 
   const handleRemoveTeacher = async (teacherId) => {
-    if (!confirm('Are you sure you want to remove this teacher?')) return;
+    if (!window.confirm('Are you sure you want to remove this teacher?')) return;
     
     try {
       const headers = { Authorization: `Bearer ${token}` };
@@ -869,15 +878,17 @@ const ManagerDashboard = ({ user, token }) => {
                       />
                     </div>
                     <div className="col-md-6">
-                      <label className="form-label">Gender</label>
-                      <select
-                        className="form-select"
-                        value={teacherForm.gender}
-                        onChange={(e) => setTeacherForm(prev => ({ ...prev, gender: e.target.value }))}
-                      >
-                        <option value="male">Male</option>
-                        <option value="female">Female</option>
-                      </select>
+                      <label className="form-label">Password *</label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        value={teacherForm.password}
+                        onChange={(e) => setTeacherForm(prev => ({ ...prev, password: e.target.value }))}
+                        placeholder="Minimum 6 characters"
+                        required
+                        minLength="6"
+                      />
+                      <div className="form-text">Teacher will use this password to login</div>
                     </div>
                     <div className="col-md-6">
                       <label className="form-label">First Name *</label>
@@ -907,6 +918,17 @@ const ManagerDashboard = ({ user, token }) => {
                         value={teacherForm.phone}
                         onChange={(e) => setTeacherForm(prev => ({ ...prev, phone: e.target.value }))}
                       />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Gender</label>
+                      <select
+                        className="form-select"
+                        value={teacherForm.gender}
+                        onChange={(e) => setTeacherForm(prev => ({ ...prev, gender: e.target.value }))}
+                      >
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                      </select>
                     </div>
                     <div className="col-md-6">
                       <label className="form-label">Date of Birth</label>
