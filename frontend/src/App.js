@@ -522,7 +522,8 @@ function App() {
       setShowSchoolPhotoModal(false);
       fetchUserSchool();
     } catch (error) {
-      setErrorMessage(error.response?.data?.detail || 'Photo upload failed');
+      const errorMessage = formatErrorMessage(error, 'Photo upload failed');
+      setErrorMessage(errorMessage);
     } finally {
       setLoading(false);
     }
