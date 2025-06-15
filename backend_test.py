@@ -871,21 +871,36 @@ def main():
     else:
         print("❌ Failed to retrieve driving schools")
     
-    # 3. Test authentication with manager credentials
-    print("\nTesting authentication with manager credentials:")
-    manager_login_success = tester.test_login("manager@test.com", "password123")
-    if manager_login_success:
-        print("✅ Manager login successful")
+    # 3. Register a new manager user
+    print("\nRegistering a new manager user:")
+    manager_email = f"manager_{int(time.time())}@test.com"
+    manager_password = "Manager123!"
+    manager_register_success = tester.test_register_user(
+        manager_email, 
+        manager_password, 
+        "Test", 
+        "Manager"
+    )
+    
+    if manager_register_success:
+        print(f"✅ Manager registration successful: {manager_email}")
         
-        # 4. Test adding a teacher with password
-        add_teacher_success, add_teacher_data = tester.test_add_teacher_with_password()
-        if add_teacher_success:
-            print("✅ Teacher addition with password successful")
-            print(f"Teacher can login with email: {add_teacher_data.get('teacher_email')} and password: {add_teacher_data.get('teacher_password')}")
+        # 4. Create a driving school to become a manager
+        create_school_success = tester.test_create_driving_school(f"Test School {int(time.time())}")
+        if create_school_success:
+            print("✅ Driving school created successfully - user is now a manager")
+            
+            # 5. Test adding a teacher with password
+            add_teacher_success, add_teacher_data = tester.test_add_teacher_with_password()
+            if add_teacher_success:
+                print("✅ Teacher addition with password successful")
+                print(f"Teacher can login with email: {add_teacher_data.get('teacher_email')} and password: {add_teacher_data.get('teacher_password')}")
+            else:
+                print("❌ Teacher addition with password failed")
         else:
-            print("❌ Teacher addition with password failed")
+            print("❌ Driving school creation failed - cannot test teacher addition")
     else:
-        print("❌ Manager login failed")
+        print("❌ Manager registration failed")
     
     # Print results
     print(f"\n📊 Tests passed: {tester.tests_passed}/{tester.tests_run}")
@@ -900,8 +915,10 @@ def main():
         print(f"  - Driving schools listing (found {len(schools_data.get('schools', []))} schools)")
         if not has_object_object:
             print("  - Schools data properly formatted (no [object Object] issue)")
-    if 'manager_login_success' in locals() and manager_login_success:
-        print("  - Manager authentication")
+    if 'manager_register_success' in locals() and manager_register_success:
+        print("  - Manager registration")
+    if 'create_school_success' in locals() and create_school_success:
+        print("  - Driving school creation")
     if 'add_teacher_success' in locals() and add_teacher_success:
         print("  - Teacher addition with password")
     
@@ -912,8 +929,10 @@ def main():
         print("  - Driving schools listing not working")
     elif schools_success and 'has_object_object' in locals() and has_object_object:
         print("  - Schools data contains [object Object] - issue not fixed")
-    if 'manager_login_success' in locals() and not manager_login_success:
-        print("  - Manager authentication not working")
+    if 'manager_register_success' in locals() and not manager_register_success:
+        print("  - Manager registration not working")
+    if 'create_school_success' in locals() and not create_school_success:
+        print("  - Driving school creation not working")
     if 'add_teacher_success' in locals() and not add_teacher_success:
         print("  - Teacher addition with password not working")
     
