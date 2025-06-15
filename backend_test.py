@@ -171,6 +171,19 @@ class DrivingSchoolAPITester:
         if success and 'id' in response:
             self.school_id = response['id']
             print(f"School created with ID: {self.school_id}")
+            
+            # Check if user role has been updated to manager
+            me_success, me_response = self.run_test(
+                "Get Current User Info",
+                "GET",
+                "api/users/me",
+                200
+            )
+            
+            if me_success:
+                self.user_role = me_response.get('role', self.user_role)
+                print(f"User role after school creation: {self.user_role}")
+            
             return True
         return False
 
