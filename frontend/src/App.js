@@ -1306,13 +1306,19 @@ function App() {
 
   // Dashboard Component - This replaces the home page when user is logged in
   const renderDashboard = () => {
+    const token = localStorage.getItem('token');
+    
     // If user is a manager, render the dedicated ManagerDashboard
     if (user?.role === 'manager') {
-      const token = localStorage.getItem('token');
       return <ManagerDashboard user={user} token={token} />;
     }
     
-    // Original dashboard for other roles
+    // If user is a teacher, render the dedicated TeacherDashboard
+    if (user?.role === 'teacher') {
+      return <TeacherDashboard user={user} token={token} />;
+    }
+    
+    // Original dashboard for other roles (student, guest)
     return (
     <div className="dashboard-page pt-5 mt-5">
       <div className="container">
