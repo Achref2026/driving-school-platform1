@@ -345,11 +345,23 @@ function App() {
       
       const response = await api.get('/api/driving-schools', { params: queryParams });
       console.log('Driving schools response:', response.data);
-      setDrivingSchools(response.data.schools);
-      setPagination(response.data.pagination);
+      setDrivingSchools(response.data.schools || []);
+      setPagination(response.data.pagination || {});
     } catch (error) {
       console.error('Error fetching driving schools:', error);
-      setErrorMessage('Failed to load driving schools: ' + (error.response?.data?.detail || error.message));
+      let errorMessage = 'Failed to load driving schools';
+      
+      if (error.response?.data?.detail) {
+        if (typeof error.response.data.detail === 'string') {
+          errorMessage += ': ' + error.response.data.detail;
+        } else {
+          errorMessage += ': ' + JSON.stringify(error.response.data.detail);
+        }
+      } else if (error.message) {
+        errorMessage += ': ' + error.message;
+      }
+      
+      setErrorMessage(errorMessage);
     } finally {
       setLoading(false);
     }
