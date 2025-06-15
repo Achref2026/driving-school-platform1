@@ -251,6 +251,12 @@ class Teacher(BaseModel):
 
 class TeacherCreate(BaseModel):
     email: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    date_of_birth: Optional[str] = None
+    gender: Optional[str] = "male"
     can_teach_male: bool = True
     can_teach_female: bool = True
 
