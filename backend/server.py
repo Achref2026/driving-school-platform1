@@ -1468,8 +1468,9 @@ async def create_enrollment(
             raise e
         raise HTTPException(status_code=500, detail="Enrollment failed")
 
-@api_router.get("/dashboard")
-async def get_dashboard_data(current_user = Depends(get_current_user)):
+# DUPLICATE DASHBOARD ENDPOINT - COMMENTED OUT TO AVOID CONFLICTS
+# @api_router.get("/dashboard")
+# async def get_dashboard_data(current_user = Depends(get_current_user)):
     try:
         dashboard_data = {
             "user": serialize_doc(current_user),
