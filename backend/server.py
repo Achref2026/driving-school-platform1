@@ -1904,12 +1904,11 @@ async def add_teacher(
         
         if not teacher_user:
             # Create new user if not exists
-            if not all([teacher_data.first_name, teacher_data.last_name]):
-                raise HTTPException(status_code=400, detail="First name and last name are required for new teachers")
+            if not all([teacher_data.first_name, teacher_data.last_name, teacher_data.password]):
+                raise HTTPException(status_code=400, detail="First name, last name, and password are required for new teachers")
             
-            # Generate a temporary password (should be changed on first login)
-            temp_password = f"temp{str(uuid.uuid4())[:8]}"
-            password_hash = pwd_context.hash(temp_password)
+            # Use the provided password instead of generating temporary one
+            password_hash = pwd_context.hash(teacher_data.password)
             
             # Parse date_of_birth if provided
             birth_date = None
@@ -1938,7 +1937,7 @@ async def add_teacher(
             
             await db.users.insert_one(teacher_user_data)
             teacher_user = teacher_user_data
-            logger.info(f"Created new teacher user: {teacher_user['email']} with temporary password: {temp_password}")
+            logger.info(f"Created new teacher user: {teacher_user['email']} with provided password")
         else:
             if teacher_user["role"] not in ["guest", "teacher"]:
                 raise HTTPException(status_code=400, detail="User cannot be assigned as teacher")
