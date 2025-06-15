@@ -257,6 +257,7 @@ class TeacherCreate(BaseModel):
     address: Optional[str] = None
     date_of_birth: Optional[str] = None
     gender: Optional[str] = "male"
+    password: str  # Added password field
     can_teach_male: bool = True
     can_teach_female: bool = True
 
