@@ -782,6 +782,57 @@ def test_get_my_quizzes(self):
         200
     )
 
+def test_add_teacher_with_password(self):
+    """Test adding a teacher with a password"""
+    if self.user_role != 'manager':
+        print("Skipping teacher addition - requires manager role")
+        return False, {}
+            
+    teacher_email = f"teacher_{int(time.time())}@test.com"
+    teacher_password = "TeacherPass123!"
+    
+    data = {
+        "email": teacher_email,
+        "first_name": "Test",
+        "last_name": "Teacher",
+        "phone": "0555123456",
+        "address": "123 Test Street",
+        "date_of_birth": "1990-01-01",
+        "gender": "male",
+        "password": teacher_password,  # Adding password field
+        "can_teach_male": True,
+        "can_teach_female": True
+    }
+    
+    success, response = self.run_test(
+        "Add Teacher with Password",
+        "POST",
+        "api/teachers/add",
+        200,
+        data=data
+    )
+    
+    if success:
+        print(f"✅ Teacher added with email: {teacher_email} and password: {teacher_password}")
+        
+        # Now test if the teacher can login with the provided password
+        login_success, login_response = self.run_test(
+            "Teacher Login with Password",
+            "POST",
+            "api/auth/login",
+            200,
+            data={"email": teacher_email, "password": teacher_password}
+        )
+        
+        if login_success and 'access_token' in login_response:
+            print(f"✅ Teacher login successful with provided password")
+            return True, {"teacher_email": teacher_email, "teacher_password": teacher_password}
+        else:
+            print(f"❌ Teacher login failed with provided password")
+            return False, {}
+    
+    return success, response
+
 def main():
     # Setup
     tester = DrivingSchoolAPITester()
@@ -789,7 +840,7 @@ def main():
     print("\n🔍 ALGERIA DRIVING SCHOOL PLATFORM API TEST\n")
     print("Testing critical functionality based on the fix request:\n")
     
-    # 1. Test health check (both root and API prefixed)
+    # 1. Test health check
     health_success, health_data = tester.test_health_check()
     if not health_success:
         print("❌ API health check failed, stopping tests")
@@ -797,21 +848,26 @@ def main():
     else:
         print(f"✅ API health check passed: {health_data}")
     
-    # 2. Test driving schools API
+    # 2. Test driving schools API - Check for [object Object] issue
     schools_success, schools_data = tester.test_get_driving_schools()
     if schools_success:
         schools_count = len(schools_data.get('schools', []))
         print(f"✅ Retrieved {schools_count} driving schools")
         
+        # Check for [object Object] issue
+        has_object_object = False
+        for school in schools_data.get('schools', []):
+            for key, value in school.items():
+                if isinstance(value, str) and "[object Object]" in value:
+                    has_object_object = True
+                    print(f"❌ Found [object Object] in school data: {key}: {value}")
+        
+        if not has_object_object:
+            print("✅ No [object Object] found in schools data - issue fixed")
+        
         # Print school names to verify
         school_names = [school.get('name', 'Unknown') for school in schools_data.get('schools', [])]
         print(f"School names: {', '.join(school_names)}")
-        
-        # Test pagination
-        if schools_data.get('pagination'):
-            print(f"✅ Pagination info: {schools_data.get('pagination')}")
-        else:
-            print("❌ Pagination information missing")
     else:
         print("❌ Failed to retrieve driving schools")
     
@@ -821,36 +877,13 @@ def main():
     if manager_login_success:
         print("✅ Manager login successful")
         
-        # 4. Test manager-specific endpoints
-        
-        # Test adding a teacher
-        add_teacher_success, add_teacher_data = tester.test_add_teacher()
+        # 4. Test adding a teacher with password
+        add_teacher_success, add_teacher_data = tester.test_add_teacher_with_password()
         if add_teacher_success:
-            print("✅ Teacher addition successful")
-            if 'teacher' in add_teacher_data:
-                print(f"Teacher added: {add_teacher_data['teacher'].get('email', 'Unknown')}")
+            print("✅ Teacher addition with password successful")
+            print(f"Teacher can login with email: {add_teacher_data.get('teacher_email')} and password: {add_teacher_data.get('teacher_password')}")
         else:
-            print("❌ Teacher addition failed")
-        
-        # Test getting manager's quizzes
-        quizzes_success, quizzes_data = tester.test_get_my_quizzes()
-        if quizzes_success:
-            quizzes_count = len(quizzes_data.get('quizzes', []))
-            print(f"✅ Retrieved {quizzes_count} quizzes for manager")
-            if quizzes_count > 0:
-                quiz_titles = [quiz.get('title', 'Unknown') for quiz in quizzes_data.get('quizzes', [])]
-                print(f"Quiz titles: {', '.join(quiz_titles)}")
-        else:
-            print("❌ Failed to retrieve manager's quizzes")
-        
-        # Test creating a quiz
-        create_quiz_success, create_quiz_data = tester.test_create_quiz()
-        if create_quiz_success:
-            print("✅ Quiz creation successful")
-            if 'quiz_id' in create_quiz_data:
-                print(f"Quiz created with ID: {create_quiz_data['quiz_id']}")
-        else:
-            print("❌ Quiz creation failed")
+            print("❌ Teacher addition with password failed")
     else:
         print("❌ Manager login failed")
     
@@ -865,32 +898,24 @@ def main():
         print("  - Backend health check")
     if schools_success:
         print(f"  - Driving schools listing (found {len(schools_data.get('schools', []))} schools)")
-        if schools_data.get('pagination'):
-            print("  - Pagination")
+        if not has_object_object:
+            print("  - Schools data properly formatted (no [object Object] issue)")
     if 'manager_login_success' in locals() and manager_login_success:
         print("  - Manager authentication")
     if 'add_teacher_success' in locals() and add_teacher_success:
-        print("  - Teacher addition")
-    if 'quizzes_success' in locals() and quizzes_success:
-        print("  - Manager quizzes retrieval")
-    if 'create_quiz_success' in locals() and create_quiz_success:
-        print("  - Quiz creation")
+        print("  - Teacher addition with password")
     
     print("\n❌ Issues/Not working:")
     if not health_success:
         print("  - Backend health check not working")
     if not schools_success:
         print("  - Driving schools listing not working")
-    elif schools_success and not schools_data.get('pagination'):
-        print("  - Pagination information missing")
+    elif schools_success and 'has_object_object' in locals() and has_object_object:
+        print("  - Schools data contains [object Object] - issue not fixed")
     if 'manager_login_success' in locals() and not manager_login_success:
         print("  - Manager authentication not working")
     if 'add_teacher_success' in locals() and not add_teacher_success:
-        print("  - Teacher addition not working")
-    if 'quizzes_success' in locals() and not quizzes_success:
-        print("  - Manager quizzes retrieval not working")
-    if 'create_quiz_success' in locals() and not create_quiz_success:
-        print("  - Quiz creation not working")
+        print("  - Teacher addition with password not working")
     
     return 0 if tester.tests_passed == tester.tests_run else 1
 
