@@ -545,7 +545,8 @@ function App() {
       fetchUserDocuments();
       fetchDashboardData();
     } catch (error) {
-      setErrorMessage(error.response?.data?.detail || 'Upload failed');
+      const errorMessage = formatErrorMessage(error, 'Upload failed');
+      setErrorMessage(errorMessage);
     } finally {
       setLoading(false);
     }
