@@ -396,7 +396,8 @@ function App() {
         });
       }
     } catch (error) {
-      setErrorMessage(error.response?.data?.detail || 'Authentication failed');
+      const errorMessage = formatErrorMessage(error, 'Authentication failed');
+      setErrorMessage(errorMessage);
     } finally {
       setLoading(false);
     }
