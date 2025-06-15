@@ -432,6 +432,38 @@ function App() {
     }
   };
 
+  // Helper function to format error messages
+  const formatErrorMessage = (error) => {
+    if (!error.response?.data?.detail) {
+      return 'Failed to register driving school';
+    }
+    
+    const detail = error.response.data.detail;
+    
+    // If detail is an array of validation errors (FastAPI validation errors)
+    if (Array.isArray(detail)) {
+      return detail.map(err => {
+        if (err.msg && err.loc) {
+          const field = err.loc[err.loc.length - 1]; // Get the field name
+          return `${field}: ${err.msg}`;
+        }
+        return err.msg || 'Validation error';
+      }).join(', ');
+    }
+    
+    // If detail is a string
+    if (typeof detail === 'string') {
+      return detail;
+    }
+    
+    // If detail is an object, try to extract meaningful message
+    if (typeof detail === 'object' && detail.msg) {
+      return detail.msg;
+    }
+    
+    return 'Failed to register driving school';
+  };
+
   // Handle driving school registration
   const handleSchoolRegistration = async (e) => {
     e.preventDefault();
@@ -466,7 +498,8 @@ function App() {
         longitude: ''
       });
     } catch (error) {
-      setErrorMessage(error.response?.data?.detail || 'Failed to register driving school');
+      const errorMessage = formatErrorMessage(error);
+      setErrorMessage(errorMessage);
     } finally {
       setLoading(false);
     }
