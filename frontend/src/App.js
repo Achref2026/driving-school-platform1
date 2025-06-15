@@ -341,9 +341,27 @@ function App() {
     try {
       setLoading(true);
       const queryParams = { ...filters, ...customFilters };
-      console.log('Fetching driving schools with params:', queryParams);
       
-      const response = await api.get('/api/driving-schools', { params: queryParams });
+      // Fix float parsing error by removing empty string values for numeric fields
+      const cleanedParams = {};
+      Object.keys(queryParams).forEach(key => {
+        const value = queryParams[key];
+        if (value !== '' && value !== null && value !== undefined) {
+          // Convert numeric strings to numbers for price and rating fields
+          if ((key === 'min_price' || key === 'max_price' || key === 'min_rating') && typeof value === 'string' && value.trim() !== '') {
+            const numValue = parseFloat(value);
+            if (!isNaN(numValue)) {
+              cleanedParams[key] = numValue;
+            }
+          } else {
+            cleanedParams[key] = value;
+          }
+        }
+      });
+      
+      console.log('Fetching driving schools with params:', cleanedParams);
+      
+      const response = await api.get('/api/driving-schools', { params: cleanedParams });
       console.log('Driving schools response:', response.data);
       setDrivingSchools(response.data.schools || []);
       setPagination(response.data.pagination || {});
