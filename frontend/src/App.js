@@ -372,6 +372,8 @@ function App() {
       });
 
       const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/register';
+      console.log('Authentication attempt:', { mode: authMode, endpoint });
+      
       const response = await api.post(endpoint, 
         authMode === 'login' ? 
           { email: authData.email, password: authData.password } : 
@@ -380,6 +382,8 @@ function App() {
           { headers: { 'Content-Type': 'application/json' } } :
           { headers: { 'Content-Type': 'multipart/form-data' } }
       );
+
+      console.log('Authentication response:', response.data);
 
       if (response.data.user && response.data.access_token) {
         localStorage.setItem('token', response.data.access_token);
@@ -402,8 +406,11 @@ function App() {
           state: '',
           profile_photo: null
         });
+        
+        console.log('Authentication successful, user set:', response.data.user);
       }
     } catch (error) {
+      console.error('Authentication error:', error);
       const errorMessage = formatErrorMessage(error, 'Authentication failed');
       setErrorMessage(errorMessage);
     } finally {
