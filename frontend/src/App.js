@@ -427,7 +427,8 @@ function App() {
       setCurrentPage('dashboard');
       fetchDashboardData();
     } catch (error) {
-      setErrorMessage(error.response?.data?.detail || 'Enrollment failed');
+      const errorMessage = formatErrorMessage(error, 'Enrollment failed');
+      setErrorMessage(errorMessage);
     } finally {
       setLoading(false);
     }
