@@ -576,6 +576,19 @@ class DrivingSchoolAPITester:
         
         return success, response
         
+    def test_get_my_quizzes(self):
+        """Test getting manager's quizzes"""
+        if self.user_role != 'manager':
+            print("Skipping get my quizzes - requires manager role")
+            return False, {}
+            
+        return self.run_test(
+            "Get My Quizzes",
+            "GET",
+            "api/quizzes/my",
+            200
+        )
+        
     def test_upload_document(self):
         """Test document upload"""
         if self.user_role not in ['student', 'teacher']:
