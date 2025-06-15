@@ -2989,7 +2989,7 @@ async def take_course_exam(
 
 # DASHBOARD ENDPOINTS
 
-@api_router.get("/dashboard/{role}")
+@api_router.get("/dashboard/role/{role}")
 async def get_dashboard(
     role: str,
     current_user = Depends(get_current_user)
