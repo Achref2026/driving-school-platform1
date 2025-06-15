@@ -1898,13 +1898,49 @@ async def add_teacher(
         if not school:
             raise HTTPException(status_code=404, detail="Manager has no driving school")
         
-        # Find teacher user by email
+        # Find teacher user by email or create new user
         teacher_user = await db.users.find_one({"email": teacher_data.email})
-        if not teacher_user:
-            raise HTTPException(status_code=404, detail="User not found with this email")
         
-        if teacher_user["role"] not in ["guest", "teacher"]:
-            raise HTTPException(status_code=400, detail="User cannot be assigned as teacher")
+        if not teacher_user:
+            # Create new user if not exists
+            if not all([teacher_data.first_name, teacher_data.last_name]):
+                raise HTTPException(status_code=400, detail="First name and last name are required for new teachers")
+            
+            # Generate a temporary password (should be changed on first login)
+            temp_password = f"temp{str(uuid.uuid4())[:8]}"
+            password_hash = pwd_context.hash(temp_password)
+            
+            # Parse date_of_birth if provided
+            birth_date = None
+            if teacher_data.date_of_birth:
+                try:
+                    birth_date = datetime.fromisoformat(teacher_data.date_of_birth)
+                except ValueError:
+                    birth_date = datetime.strptime(teacher_data.date_of_birth, '%Y-%m-%d')
+            
+            teacher_user_data = {
+                "id": str(uuid.uuid4()),
+                "email": teacher_data.email,
+                "password_hash": password_hash,
+                "first_name": teacher_data.first_name,
+                "last_name": teacher_data.last_name,
+                "phone": teacher_data.phone or "",
+                "address": teacher_data.address or "",
+                "date_of_birth": birth_date or datetime.utcnow() - timedelta(days=25*365),  # Default to 25 years ago
+                "gender": teacher_data.gender or "male",
+                "role": "teacher",
+                "state": current_user.get("state", "Alger"),  # Use manager's state as default
+                "profile_photo_url": None,
+                "created_at": datetime.utcnow(),
+                "is_active": True
+            }
+            
+            await db.users.insert_one(teacher_user_data)
+            teacher_user = teacher_user_data
+            logger.info(f"Created new teacher user: {teacher_user['email']} with temporary password: {temp_password}")
+        else:
+            if teacher_user["role"] not in ["guest", "teacher"]:
+                raise HTTPException(status_code=400, detail="User cannot be assigned as teacher")
         
         # Check if teacher already exists for this school
         existing_teacher = await db.teachers.find_one({
