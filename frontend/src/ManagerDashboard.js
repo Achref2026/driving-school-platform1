@@ -139,7 +139,11 @@ const ManagerDashboard = ({ user, token }) => {
       const headers = { Authorization: `Bearer ${token}` };
       const response = await axios.post(`${API}/teachers/add`, teacherForm, { headers });
       
-      setTeachers(prev => [...prev, response.data]);
+      // Update the teachers list with the new teacher
+      if (response.data.teacher) {
+        setTeachers(prev => [...prev, response.data.teacher]);
+      }
+      
       setShowTeacherModal(false);
       setTeacherForm({
         email: '',
@@ -156,7 +160,8 @@ const ManagerDashboard = ({ user, token }) => {
       alert('Teacher added successfully!');
     } catch (error) {
       console.error('Error adding teacher:', error);
-      alert('Failed to add teacher');
+      const errorMessage = error.response?.data?.detail || 'Failed to add teacher';
+      alert(errorMessage);
     }
   };
 
