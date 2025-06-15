@@ -341,12 +341,15 @@ function App() {
     try {
       setLoading(true);
       const queryParams = { ...filters, ...customFilters };
+      console.log('Fetching driving schools with params:', queryParams);
       
       const response = await api.get('/api/driving-schools', { params: queryParams });
+      console.log('Driving schools response:', response.data);
       setDrivingSchools(response.data.schools);
       setPagination(response.data.pagination);
     } catch (error) {
       console.error('Error fetching driving schools:', error);
+      setErrorMessage('Failed to load driving schools: ' + (error.response?.data?.detail || error.message));
     } finally {
       setLoading(false);
     }
