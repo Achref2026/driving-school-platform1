@@ -433,9 +433,9 @@ function App() {
   };
 
   // Helper function to format error messages
-  const formatErrorMessage = (error) => {
+  const formatErrorMessage = (error, defaultMessage = 'An error occurred') => {
     if (!error.response?.data?.detail) {
-      return 'Failed to register driving school';
+      return defaultMessage;
     }
     
     const detail = error.response.data.detail;
@@ -461,7 +461,7 @@ function App() {
       return detail.msg;
     }
     
-    return 'Failed to register driving school';
+    return defaultMessage;
   };
 
   // Handle driving school registration
