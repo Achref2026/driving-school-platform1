@@ -362,6 +362,12 @@ class DrivingSchoolAPITester:
             
         data = {
             "email": f"teacher_{int(time.time())}@test.com",
+            "first_name": "Test",
+            "last_name": "Teacher",
+            "phone": "0555123456",
+            "address": "123 Test Street",
+            "date_of_birth": "1990-01-01",
+            "gender": "male",
             "can_teach_male": True,
             "can_teach_female": True
         }
