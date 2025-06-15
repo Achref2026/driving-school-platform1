@@ -295,11 +295,19 @@ function App() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
+      console.log('Fetching dashboard data...');
       const response = await api.get('/api/dashboard');
+      console.log('Dashboard data response:', response.data);
       setDashboardData(response.data);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      setErrorMessage('Failed to load dashboard data');
+      if (error.response?.status === 401) {
+        // Token might be invalid, logout user
+        console.log('Authentication failed, logging out user');
+        handleLogout();
+      } else {
+        setErrorMessage('Failed to load dashboard data: ' + (error.response?.data?.detail || error.message));
+      }
     } finally {
       setLoading(false);
     }
