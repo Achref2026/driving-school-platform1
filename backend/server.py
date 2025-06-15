@@ -941,6 +941,12 @@ async def calculate_student_metrics(student_id: str) -> dict:
 async def api_health_check():
     return {"status": "healthy", "message": "Driving School Platform API is running"}
 
+@api_router.get("/users/me")
+async def get_current_user_info(current_user: dict = Depends(get_current_user)):
+    """Get current authenticated user information"""
+    user_data = {k: v for k, v in current_user.items() if k != "password_hash"}
+    return serialize_doc(user_data)
+
 @api_router.get("/states")
 async def get_states():
     return {"states": ALGERIAN_STATES}
