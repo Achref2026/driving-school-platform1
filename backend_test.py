@@ -311,8 +311,8 @@ class DrivingSchoolAPITester:
         if success and 'quiz_id' in response:
             self.quiz_id = response['quiz_id']
             print(f"Quiz created with ID: {self.quiz_id}")
-            return True
-        return False
+        
+        return success, response
 
     def test_get_quizzes(self):
         """Test getting quizzes"""
