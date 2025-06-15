@@ -1969,13 +1969,31 @@ async def add_teacher(
         
         await db.teachers.insert_one(teacher_doc)
         
-        # Update user role to teacher
-        await db.users.update_one(
-            {"id": teacher_user["id"]},
-            {"$set": {"role": "teacher"}}
-        )
+        # Update user role to teacher (if not already)
+        if teacher_user["role"] != "teacher":
+            await db.users.update_one(
+                {"id": teacher_user["id"]},
+                {"$set": {"role": "teacher"}}
+            )
         
-        return {"teacher_id": teacher_id, "message": "Teacher added successfully"}
+        # Return teacher details for frontend
+        teacher_response = {
+            "id": teacher_id,
+            "user_id": teacher_user["id"],
+            "user_name": f"{teacher_user['first_name']} {teacher_user['last_name']}",
+            "user_email": teacher_user["email"],
+            "can_teach_male": teacher_data.can_teach_male,
+            "can_teach_female": teacher_data.can_teach_female,
+            "rating": 0.0,
+            "total_reviews": 0,
+            "is_approved": False,
+            "created_at": datetime.utcnow().isoformat()
+        }
+        
+        return {
+            "teacher": serialize_doc(teacher_response),
+            "message": "Teacher added successfully"
+        }
     
     except Exception as e:
         logger.error(f"Add teacher error: {str(e)}")
